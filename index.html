@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>নামের মিনিং ফাইন্ডার · অর্থ ও উৎস</title>
+<meta name="description" content="যেকোনো বাংলা নামের মানে, উৎস (সংস্কৃত/আরবি/ফারসি/হিব্রু) আর বিকল্প বানান খুঁজুন — সম্পূর্ণ অফলাইন, কোনো অ্যাকাউন্ট লাগে না।">
+<style>
+  :root{
+    --bg:#050812;--card:#0c1220;--card-border:#1c2740;--text:#e8edf8;
+    --muted:#8b98b8;--green:#00a676;--green-2:#00c98f;--red:#f42a41;
+    --gold:#f5c04a;--blue:#5aa7ff;--pink:#ff7ab8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:radial-gradient(1100px 500px at 50% -10%,#101c2e 0%,var(--bg) 60%);
+    color:var(--text);min-height:100vh;
+    font-family:'Noto Sans Bengali','Hind Siliguri','SolaimanLipi',system-ui,sans-serif;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:28px 16px 60px}
+  header{text-align:center;margin-bottom:24px}
+  .badge{
+    display:inline-block;font-size:12.5px;color:var(--green-2);
+    border:1px solid rgba(0,166,118,.4);border-radius:999px;padding:4px 14px;margin-bottom:12px;
+    background:rgba(0,166,118,.08);letter-spacing:.3px;
+  }
+  h1{font-size:clamp(26px,5vw,38px);font-weight:800;line-height:1.3}
+  h1 .hl{color:var(--gold)}
+  .sub{color:var(--muted);font-size:14.5px;margin-top:8px;line-height:1.7}
+
+  .daily{
+    background:linear-gradient(135deg,rgba(245,192,74,.08),rgba(0,166,118,.06));
+    border:1px solid rgba(245,192,74,.25);border-radius:16px;padding:16px 20px;margin-bottom:16px;
+    display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+  }
+  .daily .lbl{font-size:12px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;font-weight:700}
+  .daily .nm{font-size:26px;font-weight:800}
+  .daily .rm{color:var(--muted);font-size:14px}
+  .daily .mn{font-size:15px;margin-top:2px;line-height:1.6}
+
+  .card{background:var(--card);border:1px solid var(--card-border);border-radius:16px;padding:18px 20px;margin-bottom:14px}
+  #q{
+    width:100%;background:#080d18;color:var(--text);border:1px solid var(--card-border);
+    border-radius:12px;padding:14px 16px;font-family:inherit;font-size:18px;outline:none;transition:border-color .15s;
+  }
+  #q:focus{border-color:var(--gold)}
+  .filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;align-items:center}
+  .flabel{font-size:12.5px;color:var(--muted);margin-right:2px}
+  .chip{
+    font-family:inherit;font-size:13px;color:var(--muted);background:#080d18;
+    border:1px solid var(--card-border);border-radius:999px;padding:5px 13px;cursor:pointer;transition:all .15s;
+  }
+  .chip:hover{color:var(--green-2);border-color:var(--green)}
+  .chip.active{color:#04120d;background:var(--green-2);border-color:var(--green-2);font-weight:700}
+  .chip.gold.active{color:#241a02;background:var(--gold);border-color:var(--gold)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:18px 2px 12px;flex-wrap:wrap}
+  .count{font-size:13.5px;color:var(--muted)}
+  .count b{color:var(--gold)}
+  .btn{
+    font-family:inherit;font-size:13.5px;color:var(--green-2);background:rgba(0,166,118,.1);
+    border:1px solid rgba(0,166,118,.4);border-radius:10px;padding:7px 15px;cursor:pointer;transition:all .15s;
+  }
+  .btn:hover{background:rgba(0,166,118,.2)}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+  .name-card{
+    background:var(--card);border:1px solid var(--card-border);border-radius:14px;
+    padding:16px 18px;position:relative;transition:border-color .15s,transform .15s;
+  }
+  .name-card:hover{border-color:#2c3d63;transform:translateY(-2px)}
+  .nm{font-size:23px;font-weight:800;line-height:1.4}
+  .rm{color:var(--muted);font-size:13.5px;margin-bottom:7px}
+  .mn{font-size:14.5px;line-height:1.65;margin-bottom:10px}
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .b{font-size:11.5px;border-radius:6px;padding:2.5px 9px;border:1px solid}
+  .b.gm{color:var(--blue);border-color:rgba(90,167,255,.4);background:rgba(90,167,255,.08)}
+  .b.gf{color:var(--pink);border-color:rgba(255,122,184,.4);background:rgba(255,122,184,.08)}
+  .b.go{color:var(--green-2);border-color:rgba(0,201,143,.35);background:rgba(0,166,118,.08)}
+  .alt{font-size:12px;color:var(--muted);margin-bottom:8px}
+  .copy-mini{
+    font-family:inherit;font-size:12px;color:var(--muted);background:transparent;
+    border:1px solid var(--card-border);border-radius:8px;padding:4px 11px;cursor:pointer;transition:all .15s;
+  }
+  .copy-mini:hover{color:var(--gold);border-color:var(--gold)}
+  .copy-mini.done{color:var(--gold);border-color:var(--gold)}
+  .empty{text-align:center;color:var(--muted);padding:40px 10px;font-size:15px;line-height:2}
+  .morenote{text-align:center;color:var(--muted);font-size:13px;margin-top:14px}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:34px;line-height:1.9}
+  footer a{color:var(--green-2);text-decoration:none}
+  footer a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">Day 5 of 100 · সম্পূর্ণ অফলাইন · <span id="total-badge">…</span>টি নাম</span>
+    <h1>নামের মিনিং ফাইন্ডার <span class="hl">🔍</span></h1>
+    <p class="sub">প্রিয় নামের আসল মানে কী? কোথা থেকে এসেছে?<br>বাংলা বা ইংরেজিতে লিখে খুঁজুন — অর্থ, উৎস, বিকল্প বানান সব এক জায়গায়।</p>
+  </header>
+
+  <div class="daily" id="daily">
+    <div>
+      <div class="lbl">✨ আজকের নাম</div>
+      <div class="nm" id="d-name">—</div>
+      <div class="rm" id="d-rom"></div>
+    </div>
+    <div class="mn" id="d-meaning" style="flex:1;min-width:220px"></div>
+  </div>
+
+  <div class="card">
+    <input id="q" type="text" placeholder="নাম লিখুন… যেমন: অনন্যা, Arif, তাসনিম, Shubho" autocomplete="off" spellcheck="false">
+    <div class="filters">
+      <span class="flabel">লিঙ্গ:</span>
+      <button class="chip gold active" data-g="all" onclick="setG(this)">সব</button>
+      <button class="chip gold" data-g="m" onclick="setG(this)">ছেলে</button>
+      <button class="chip gold" data-g="f" onclick="setG(this)">মেয়ে</button>
+      <span class="flabel" style="margin-left:10px">উৎস:</span>
+      <button class="chip active" data-o="all" onclick="setO(this)">সব</button>
+      <button class="chip" data-o="সংস্কৃত" onclick="setO(this)">সংস্কৃত</button>
+      <button class="chip" data-o="আরবি" onclick="setO(this)">আরবি</button>
+      <button class="chip" data-o="ফারসি" onclick="setO(this)">ফারসি</button>
+      <button class="chip" data-o="হিব্রু" onclick="setO(this)">হিব্রু</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="count" id="count"></div>
+    <button class="btn" onclick="randomName()">🎲 র‍্যান্ডম নাম দেখুন</button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="morenote hidden" id="morenote"></div>
+
+  <footer>
+    Day 5 of 100 · Built in public by <a href="https://github.com/iamzahirul" target="_blank" rel="noopener">Rasel (@iamzahirul)</a><br>
+    <span style="opacity:.75">🔒 সবকিছু আপনার ব্রাউজারেই — কোনো ডাটা কোথাও যায় না · নামের অর্থ অভিধান-ভিত্তিক সরলীকৃত ব্যাখ্যা</span>
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   নামের মিনিং ফাইন্ডার — কিউরেটেড ডিকশনারি
+   g: m=ছেলে, f=মেয়ে · o: উৎস · alt: বিকল্প বানান/রোমানাইজেশন
+   ============================================================ */
+const NAMES = [
+/* ---------- সংস্কৃত · ছেলে ---------- */
+{n:'অরূপ',r:'Arup',g:'m',o:'সংস্কৃত',m:'রূপহীন; যা চোখে ধরা যায় না এমন সৌন্দর্য'},
+{n:'অনিক',r:'Anik',g:'m',o:'সংস্কৃত',m:'সেনা, যোদ্ধা'},
+{n:'অরিন্দম',r:'Arindam',g:'m',o:'সংস্কৃত',m:'শত্রুদমনকারী, পরাক্রমশালী'},
+{n:'অভিষেক',r:'Abhishek',g:'m',o:'সংস্কৃত',m:'রাজ্যাভিষেক, পবিত্র জলে স্নান',alt:['অভিষিক্ত','Abhishekh']},
+{n:'আকাশ',r:'Akash',g:'m',o:'সংস্কৃত',m:'গগন, আকাশ'},
+{n:'আনন্দ',r:'Anand',g:'m',o:'সংস্কৃত',m:'পরম সুখ, হর্ষ'},
+{n:'অগ্নি',r:'Agni',g:'m',o:'সংস্কৃত',m:'আগুন; অগ্নিদেবের নাম'},
+{n:'অমিত',r:'Amit',g:'m',o:'সংস্কৃত',m:'অসীম, যার মাপ নেই'},
+{n:'ঈশান',r:'Ishan',g:'m',o:'সংস্কৃত',m:'সূর্য; শিবের নাম',alt:['ঈশান','Ishaan']},
+{n:'উজ্জ্বল',r:'Ujjwal',g:'m',o:'সংস্কৃত',m:'দীপ্তিময়, উজ্জ্বল'},
+{n:'ঋত্বিক',r:'Ritwik',g:'m',o:'সংস্কৃত',m:'পুরোহিত; ঋতুসম্পর্কীয়',alt:['ঋত্বিক','Rittik']},
+{n:'অনির্বাণ',r:'Anirban',g:'m',o:'সংস্কৃত',m:'যে অগ্নি কখনো নেভে না'},
+{n:'অয়ন',r:'Ayan',g:'m',o:'সংস্কৃত',m:'পথ; সূর্যের গতিপথ (উত্তরায়ণ-দক্ষিণায়ণ)'},
+{n:'অর্ণব',r:'Arnab',g:'m',o:'সংস্কৃত',m:'সমুদ্র, ঢেউ'},
+{n:'কুণাল',r:'Kunal',g:'m',o:'সংস্কৃত',m:'পদ্মফুল; সম্রাট অশোকের পুত্রের নাম'},
+{n:'কৌশিক',r:'Kaushik',g:'m',o:'সংস্কৃত',m:'বিশ্বামিত্রের নাম; কুশের পুত্র'},
+{n:'চয়ন',r:'Chayan',g:'m',o:'সংস্কৃত',m:'নির্বাচন, সংগ্রহ',alt:['চয়ন','Choyon']},
+{n:'জয়',r:'Joy',g:'m',o:'সংস্কৃত',m:'বিজয়, জয়লাভ'},
+{n:'তমাল',r:'Tamal',g:'m',o:'সংস্কৃত',m:'তমাল গাছের নাম'},
+{n:'তন্ময়',r:'Tanmoy',g:'m',o:'সংস্কৃত',m:'একাত্ম, কোনো কিছুতে ডুবে থাকা'},
+{n:'তিমির',r:'Timir',g:'m',o:'সংস্কৃত',m:'অন্ধকার'},
+{n:'তুষার',r:'Tushar',g:'m',o:'সংস্কৃত',m:'কুয়াশা, তুষারকণা'},
+{n:'দীপ',r:'Deep',g:'m',o:'সংস্কৃত',m:'প্রদীপ, আলো',alt:['দীপ্ত','Dipto','Dip']},
+{n:'ধ্রুব',r:'Dhruba',g:'m',o:'সংস্কৃত',m:'ধ্রুবতারা; অচল, স্থির'},
+{n:'নীল',r:'Neel',g:'m',o:'সংস্কৃত',m:'নীল রঙ; নীলকণ্ঠ শিব'},
+{n:'পলাশ',r:'Palash',g:'m',o:'সংস্কৃত',m:'পলাশ ফুলের গাছ (বসন্তের লাল ফুল)'},
+{n:'পার্থ',r:'Parth',g:'m',o:'সংস্কৃত',m:'পৃথার পুত্র — অর্জুনের নাম'},
+{n:'প্রিয়',r:'Priyo',g:'m',o:'সংস্কৃত',m:'প্রিয়জন, ভালোবাসার'},
+{n:'প্রতীক',r:'Protik',g:'m',o:'সংস্কৃত',m:'প্রতীক, চিহ্ন'},
+{n:'বিজয়',r:'Bijoy',g:'m',o:'সংস্কৃত',m:'জয়, বিজয়',alt:['বিজয়','Vijay']},
+{n:'বরুণ',r:'Barun',g:'m',o:'সংস্কৃত',m:'জলদেবতা; সমুদ্র',alt:['বরুন','Varun']},
+{n:'মৃন্ময়',r:'Mrinmoy',g:'m',o:'সংস্কৃত',m:'মাটি দিয়ে গড়া'},
+{n:'রুদ্র',r:'Rudra',g:'m',o:'সংস্কৃত',m:'শিবের নাম; গর্জনকারী'},
+{n:'শুভ্র',r:'Shubhro',g:'m',o:'সংস্কৃত',m:'সাদা, বিশুদ্ধ',alt:['শুভ','Shubho']},
+{n:'সৌম্য',r:'Soumya',g:'m',o:'সংস্কৃত',m:'শান্ত, কোমল; চন্দ্রের মতো'},
+{n:'শাওন',r:'Shaon',g:'m',o:'সংস্কৃত',m:'বর্ষার মাস শ্রাবণ',alt:['শ্রাবণ','Shrabon']},
+{n:'হিমেল',r:'Himel',g:'m',o:'সংস্কৃত',m:'শিশিরসিক্ত, ঠান্ডা'},
+{n:'অভিজিৎ',r:'Abhijit',g:'m',o:'সংস্কৃত',m:'সর্বদা জয়ী; একটি নক্ষত্রের নাম'},
+{n:'অনিন্দ্য',r:'Aninda',g:'m',o:'সংস্কৃত',m:'নির্দোষ, নিন্দাহীন'},
+{n:'সুব্রত',r:'Subrata',g:'m',o:'সংস্কৃত',m:'উত্তম ব্রতধারী, নিষ্ঠাবান'},
+{n:'সমীর',r:'Samir',g:'m',o:'সংস্কৃত/আরবি',m:'বাতাস (সংস্কৃত) · রাতের সঙ্গী (আরবি)'},
+/* ---------- সংস্কৃত · মেয়ে ---------- */
+{n:'অনন্যা',r:'Anannya',g:'f',o:'সংস্কৃত',m:'অতুলনীয়, একমেবাদ্বিতীয়ম'},
+{n:'অপরাজিতা',r:'Aparajita',g:'f',o:'সংস্কৃত',m:'অজেয়া; নীল অপরাজিতা ফুল'},
+{n:'অর্পিতা',r:'Arpita',g:'f',o:'সংস্কৃত',m:'উৎসর্গিতা, নিবেদিতা'},
+{n:'অমৃতা',r:'Amrita',g:'f',o:'সংস্কৃত',m:'অমৃতময়ী, অমরণ'},
+{n:'ঐশী',r:'Aishi',g:'f',o:'সংস্কৃত',m:'ঈশ্বরসম্পর্কীয়, দিব্য'},
+{n:'কবিতা',r:'Kabita',g:'f',o:'সংস্কৃত',m:'কবিতা, ছন্দময় রচনা'},
+{n:'কাজল',r:'Kajol',g:'f',o:'সংস্কৃত',m:'চোখের কাজল, গাঢ় কালিমা'},
+{n:'কুহু',r:'Kuhu',g:'f',o:'সংস্কৃত',m:'কোকিলের ডাক'},
+{n:'চন্দ্রিমা',r:'Chandrima',g:'f',o:'সংস্কৃত',m:'জ্যোৎস্না, চাঁদের আলো'},
+{n:'জয়া',r:'Jaya',g:'f',o:'সংস্কৃত',m:'বিজয়, জয়যুক্তা'},
+{n:'তিতলি',r:'Titli',g:'f',o:'সংস্কৃত',m:'প্রজাপতি'},
+{n:'তিয়াসা',r:'Tiyasa',g:'f',o:'সংস্কৃত',m:'তৃষ্ণা, পিপাসা'},
+{n:'দীপা',r:'Deepa',g:'f',o:'সংস্কৃত',m:'প্রদীপ, আলো'},
+{n:'নন্দিতা',r:'Nandita',g:'f',o:'সংস্কৃত',m:'আনন্দিতা, হর্ষিতা'},
+{n:'নীলাঞ্জনা',r:'Nilanjana',g:'f',o:'সংস্কৃত',m:'নীলপদ্ম; কাজল'},
+{n:'পূজা',r:'Puja',g:'f',o:'সংস্কৃত',m:'পূজা, অর্চনা'},
+{n:'প্রিয়া',r:'Priya',g:'f',o:'সংস্কৃত',m:'প্রিয়জন, ভালোবাসার'},
+{n:'বৃষ্টি',r:'Brishti',g:'f',o:'সংস্কৃত',m:'বর্ষণ, বৃষ্টি'},
+{n:'বৈশাখী',r:'Boishakhi',g:'f',o:'সংস্কৃত',m:'বৈশাখ মাসের; নববর্ষের'},
+{n:'বীণা',r:'Bina',g:'f',o:'সংস্কৃত',m:'বীণা বাদ্যযন্ত্র; সরস্বতীর বীণা'},
+{n:'মিতালি',r:'Mitali',g:'f',o:'সংস্কৃত',m:'বন্ধুত্ব, সৌহার্দ্য'},
+{n:'মৌসুমী',r:'Moushumi',g:'f',o:'সংস্কৃত',m:'ঋতুসম্পর্কীয়; বর্ষার বাতাস'},
+{n:'মুক্তা',r:'Mukta',g:'f',o:'সংস্কৃত',m:'মোতি, মুক্তা'},
+{n:'মাধবী',r:'Madhobi',g:'f',o:'সংস্কৃত',m:'মাধবীলতা — বসন্তের সাদা ফুল'},
+{n:'মালতী',r:'Malati',g:'f',o:'সংস্কৃত',m:'মালতী ফুল (জুঁইজাতীয় সুগন্ধি ফুল)'},
+{n:'ঋতুপর্ণা',r:'Rituparna',g:'f',o:'সংস্কৃত',m:'ঋতুর পাতা — পর্ণশোভিতা'},
+{n:'রিমঝিম',r:'Rimjhim',g:'f',o:'সংস্কৃত',m:'গুঁড়িগুঁড়ি বৃষ্টির শব্দ'},
+{n:'লাবণ্য',r:'Labannya',g:'f',o:'সংস্কৃত',m:'সৌন্দর্য, মাধুর্য'},
+{n:'লীলা',r:'Leela',g:'f',o:'সংস্কৃত',m:'খেলা, ঈশ্বরের লীলা'},
+{n:'শর্মিলা',r:'Sharmila',g:'f',o:'সংস্কৃত',m:'আশ্রয়দাত্রী, কোমলা'},
+{n:'শিখা',r:'Shikha',g:'f',o:'সংস্কৃত',m:'অগ্নিশিখা; শীর্ষ'},
+{n:'শ্রাবন্তী',r:'Shrabonti',g:'f',o:'সংস্কৃত',m:'শ্রাবণ মাসের বৃষ্টি'},
+{n:'শ্রেয়া',r:'Shreya',g:'f',o:'সংস্কৃত',m:'শ্রেষ্ঠা, কল্যাণী'},
+{n:'স্নিগ্ধা',r:'Snigdha',g:'f',o:'সংস্কৃত',m:'স্নেহময়ী, কোমলা'},
+{n:'সুপ্রিয়া',r:'Supriya',g:'f',o:'সংস্কৃত',m:'অতি প্রিয়া, পরম ভালোবাসার'},
+{n:'সুলগ্না',r:'Sulagna',g:'f',o:'সংস্কৃত',m:'সুসংলগ্না, একনিষ্ঠা'},
+{n:'সোহাগী',r:'Sohagi',g:'f',o:'সংস্কৃত',m:'স্নেহশীলা, সোহাগিনী'},
+{n:'হিয়া',r:'Hiya',g:'f',o:'সংস্কৃত',m:'হৃদয়, মন'},
+{n:'উর্মি',r:'Urmi',g:'f',o:'সংস্কৃত',m:'ঢেউ, তরঙ্গ'},
+{n:'ঊষা',r:'Usha',g:'f',o:'সংস্কৃত',m:'প্রভাত, ভোরের আলো'},
+/* ---------- আরবি · ছেলে ---------- */
+{n:'আব্দুল্লাহ',r:'Abdullah',g:'m',o:'আরবি',m:'আল্লাহর বান্দা',alt:['আব্দুল্লা','Abdulla']},
+{n:'আরিফ',r:'Arif',g:'m',o:'আরবি',m:'জ্ঞানী, বিজ্ঞ, পরিচিত'},
+{n:'আসলাম',r:'Aslam',g:'m',o:'আরবি',m:'নিরাপদ, ক্ষতিমুক্ত'},
+{n:'ইমরান',r:'Imran',g:'m',o:'আরবি',m:'সমৃদ্ধি, দীর্ঘজীবন'},
+{n:'কামরুল',r:'Kamrul',g:'m',o:'আরবি',m:'চাঁদের সৌন্দর্য (কামার আল-দ্বীন)',alt:['কামরুল ইসলাম','Kamrul']},
+{n:'জাহিদ',r:'Zahid',g:'m',o:'আরবি',m:'সংযমী, ইবাদতপরায়ণ'},
+{n:'তানভীর',r:'Tanvir',g:'m',o:'আরবি',m:'আলোকিতকারী, দীপ্তিময়'},
+{n:'নাফিস',r:'Nafis',g:'m',o:'আরবি',m:'মূল্যবান, উৎকৃষ্ট'},
+{n:'ফাহিম',r:'Fahim',g:'m',o:'আরবি',m:'বুদ্ধিমান, বোধশক্তিসম্পন্ন'},
+{n:'মাহমুদ',r:'Mahmud',g:'m',o:'আরবি',m:'প্রশংসিত, গুণগ্রাহী'},
+{n:'রফিক',r:'Rafiq',g:'m',o:'আরবি',m:'বন্ধু, সঙ্গী',alt:['রফিকুল','Rafique']},
+{n:'সাব্বির',r:'Sabbir',g:'m',o:'আরবি',m:'ধৈর্যশীল'},
+{n:'সাকিব',r:'Sakib',g:'m',o:'আরবি',m:'দীপ্ত নক্ষত্র (আল-সাকিব)'},
+{n:'সালমান',r:'Salman',g:'m',o:'আরবি',m:'নিরাপদ, সুস্থ, শান্তিময়'},
+{n:'সোহেল',r:'Sohel',g:'m',o:'আরবি',m:'সুহাইল — দক্ষিণ আকাশের উজ্জ্বল নক্ষত্র'},
+{n:'হাসান',r:'Hasan',g:'m',o:'আরবি',m:'সুন্দর, উত্তম'},
+{n:'হোসেন',r:'Hossain',g:'m',o:'আরবি',m:'সুন্দর, সুশোভন',alt:['হোসাইন','হুসাইন','Hussain','Husain']},
+{n:'জুবায়ের',r:'Zubair',g:'m',o:'আরবি',m:'শক্তিশালী, দৃঢ়, বিচক্ষণ'},
+{n:'তানজিম',r:'Tanjim',g:'m',o:'আরবি',m:'শৃঙ্খলা, সুন্দর আয়োজন'},
+{n:'রায়হান',r:'Rayhan',g:'m',o:'আরবি',m:'সুগন্ধি গাছ; জান্নাতের ফুল'},
+{n:'ফারহান',r:'Farhan',g:'m',o:'আরবি',m:'আনন্দিত, খুশি'},
+{n:'মেহেদী',r:'Mehedi',g:'m',o:'আরবি',m:'মেহেদি গাছ (হিনা)'},
+{n:'রাকিব',r:'Rakib',g:'m',o:'আরবি',m:'রক্ষক, পর্যবেক্ষক'},
+{n:'নাজমুল',r:'Nazmul',g:'m',o:'আরবি',m:'নক্ষত্রের আলো (নাজম আল-দ্বীন)'},
+{n:'সাজ্জাদ',r:'Sajjad',g:'m',o:'আরবি',m:'অধিক সেজদাকারী, ইবাদতকারী'},
+{n:'তাহসান',r:'Tahsan',g:'m',o:'আরবি',m:'সৌন্দর্য, উত্তমতা (ইহসান)'},
+{n:'আনাস',r:'Anas',g:'m',o:'আরবি',m:'স্নেহ, ভালোবাসা, আপনজন'},
+{n:'ওমর',r:'Omar',g:'m',o:'আরবি',m:'দীর্ঘজীবন, আয়ুষ্কাল',alt:['উমর','Umar']},
+{n:'আলী',r:'Ali',g:'m',o:'আরবি',m:'সমুন্নত, মহান'},
+{n:'হামজা',r:'Hamza',g:'m',o:'আরবি',m:'সিংহ; দৃঢ়, শক্তিশালী'},
+{n:'বিলাল',r:'Bilal',g:'m',o:'আরবি',m:'জলস্রোত, সিক্ততা; ইসলামের প্রথম মুয়াজ্জিন'},
+{n:'সাইফ',r:'Saif',g:'m',o:'আরবি',m:'তলোয়ার',alt:['সাইফুল্লাহ','Saif']},
+{n:'তামিম',r:'Tamim',g:'m',o:'আরবি',m:'পরিপূর্ণ, পূর্ণাঙ্গ'},
+{n:'আদনান',r:'Adnan',g:'m',o:'আরবি',m:'স্থায়ী বাসিন্দা; নবীর পূর্বপুরুষের নাম'},
+{n:'জামিল',r:'Jamil',g:'m',o:'আরবি',m:'সুন্দর, মনোহর'},
+{n:'রাশেদ',r:'Rashed',g:'m',o:'আরবি',m:'সৎপথপ্রাপ্ত, সুপথের যাত্রী'},
+{n:'মুস্তাফা',r:'Mustafa',g:'m',o:'আরবি',m:'মনোনীত, নির্বাচিত'},
+/* ---------- আরবি · মেয়ে ---------- */
+{n:'আয়েশা',r:'Ayesha',g:'f',o:'আরবি',m:'জীবিতা, সমৃদ্ধশালিনী; নবীজির স্ত্রীর নাম',alt:['আয়িশা','Aisha']},
+{n:'ফাতেমা',r:'Fatema',g:'f',o:'আরবি',m:'যে বিরত থাকে; নবীজির কন্যার নাম',alt:['ফাতিমা','Fatima']},
+{n:'নুসরাত',r:'Nusrat',g:'f',o:'আরবি',m:'সাহায্য, বিজয়'},
+{n:'তাসনিম',r:'Tasnim',g:'f',o:'আরবি',m:'জান্নাতের ঝর্ণার নাম'},
+{n:'সুমাইয়া',r:'Sumaiya',g:'f',o:'আরবি',m:'উচ্চ মর্যাদাশালিনী; ইসলামের প্রথম শহীদের নাম'},
+{n:'রুমানা',r:'Rumana',g:'f',o:'আরবি',m:'ডালিম (আরবি “রুম্মান”)'},
+{n:'নাজিয়া',r:'Naziya',g:'f',o:'আরবি',m:'গর্বিতা, সম্মানিতা'},
+{n:'সাদিয়া',r:'Sadia',g:'f',o:'আরবি',m:'সৌভাগ্যবতী'},
+{n:'লামিয়া',r:'Lamia',g:'f',o:'আরবি',m:'দীপ্তিময়ী, কান্তিময়ী'},
+{n:'রাইসা',r:'Raisa',g:'f',o:'আরবি',m:'নেত্রী, রাজকুমারী'},
+{n:'জান্নাত',r:'Jannat',g:'f',o:'আরবি',m:'জান্নাত — উদ্যান, স্বর্গ'},
+{n:'আমিনা',r:'Amina',g:'f',o:'আরবি',m:'বিশ্বস্তা, আমানতদার'},
+{n:'খাদিজা',r:'Khadija',g:'f',o:'আরবি',m:'অকালপ্রসূতা; নবীজির প্রথম স্ত্রীর নাম'},
+{n:'জয়নব',r:'Zainab',g:'f',o:'আরবি',m:'সুগন্ধি গাছের নাম',alt:['জিনাব','জয়নব','Zaynab']},
+{n:'সাফিয়া',r:'Safiya',g:'f',o:'আরবি',m:'বিশুদ্ধা, মনোনীতা'},
+{n:'হাবিবা',r:'Habiba',g:'f',o:'আরবি',m:'প্রিয়া, ভালোবাসার'},
+{n:'লাইলা',r:'Laila',g:'f',o:'আরবি',m:'রাত, অন্ধকার রজনী',alt:['লেইলা','লায়লা','Layla']},
+{n:'তাসলিমা',r:'Taslima',g:'f',o:'আরবি',m:'অভিবাদন, আত্মসমর্পণ'},
+{n:'নাফিসা',r:'Nafisa',g:'f',o:'আরবি',m:'মূল্যবানা, উৎকৃষ্টা'},
+{n:'নিশাত',r:'Nishat',g:'f',o:'আরবি',m:'আনন্দ, উল্লাস'},
+{n:'রাবেয়া',r:'Rabeya',g:'f',o:'আরবি',m:'চতুর্থা; বসন্তের',alt:['রাবেয়া','Rabeya']},
+{n:'সুলতানা',r:'Sultana',g:'f',o:'আরবি',m:'রানী, শাসিকা'},
+{n:'হুমায়রা',r:'Humaira',g:'f',o:'আরবি',m:'লালিমাভ, গোলাপি'},
+{n:'আবিদা',r:'Abida',g:'f',o:'আরবি',m:'উপাসিকা, ইবাদতকারিণী'},
+{n:'ইসরাত',r:'Ishrat',g:'f',o:'আরবি',m:'আনন্দ, সুখের আসর'},
+{n:'সালমা',r:'Salma',g:'f',o:'আরবি',m:'নিরাপদা, শান্তিময়ী'},
+/* ---------- ফারসি ---------- */
+{n:'শাহরিয়ার',r:'Shahriar',g:'m',o:'ফারসি',m:'বাদশাহ, রাজা'},
+{n:'শাকিব',r:'Shakib',g:'m',o:'ফারসি',m:'দানশীল, ক্ষমাশীল'},
+{n:'পারভেজ',r:'Parvez',g:'m',o:'ফারসি',m:'বিজয়ী, সৌভাগ্যবান'},
+{n:'আরমান',r:'Arman',g:'m',o:'ফারসি',m:'আকাঙ্ক্ষা, আশা'},
+{n:'শিরিন',r:'Shirin',g:'f',o:'ফারসি',m:'মিষ্টি, মধুর'},
+{n:'রুকসানা',r:'Roksana',g:'f',o:'ফারসি',m:'উষা, দীপ্তিময়ী',alt:['রোজানা','Roxana']},
+{n:'নার্গিস',r:'Nargis',g:'f',o:'ফারসি',m:'নার্গিস ফুল'},
+{n:'ফিরোজা',r:'Firoza',g:'f',o:'ফারসি',m:'ফিরোজা পাথর; বিজয়িনী'},
+{n:'মেহজাবিন',r:'Mehjabin',g:'f',o:'ফারসি',m:'চাঁদের মতো মুখশ্রী'},
+{n:'শাবনম',r:'Shabnam',g:'f',o:'ফারসি',m:'শিশির, রাতের জলকণা'},
+{n:'আফরিন',r:'Afrin',g:'f',o:'ফারসি',m:'প্রশংসা, শুভেচ্ছা'},
+{n:'ফারজানা',r:'Farzana',g:'f',o:'ফারসি',m:'জ্ঞানী, বিচক্ষণা'},
+{n:'শারমিন',r:'Sharmin',g:'f',o:'ফারসি',m:'লাজুকতা, বিনয়'},
+{n:'জেসমিন',r:'Jesmin',g:'f',o:'ফারসি',m:'জুঁই ফুল (ফারসি “ইয়াসমিন”)',alt:['ইয়াসমিন','ياسمين','Yasmin','Jasmine']},
+{n:'দিলরুবা',r:'Dilruba',g:'f',o:'ফারসি',m:'যে মন হরণ করে'},
+{n:'ফেরদৌস',r:'Ferdous',g:'f',o:'ফারসি',m:'সর্বোচ্চ জান্নাত, স্বর্গোদ্যান'},
+/* ---------- হিব্রু মূল ---------- */
+{n:'ইউসুফ',r:'Yusuf',g:'m',o:'হিব্রু',m:'নবীর নাম; মূল অর্থ “ঈশ্বর বৃদ্ধি করেন”',alt:['ইউসুফ','ইউসুফ','Yousuf','Joseph']},
+{n:'ইব্রাহিম',r:'Ibrahim',g:'m',o:'হিব্রু',m:'নবীর নাম; মূল অর্থ “বহুর পিতা”',alt:['ইবরাহিম','Abraham']},
+{n:'মুসা',r:'Musa',g:'m',o:'হিব্রু',m:'নবীর নাম; মূল অর্থ “জল থেকে উদ্ধার”',alt:['Moses']},
+{n:'দাউদ',r:'Daud',g:'m',o:'হিব্রু',m:'নবীর নাম; মূল অর্থ “প্রিয়”',alt:['দাউদ','ডেভিড','David']},
+{n:'সুলাইমান',r:'Sulaiman',g:'m',o:'হিব্রু',m:'নবীর নাম; মূল অর্থ “শান্তিময়”',alt:['সোলায়মান','Solomon']},
+{n:'ইসমাইল',r:'Ismail',g:'m',o:'হিব্রু',m:'নবীর নাম; মূল অর্থ “ঈশ্বর শোনেন”'},
+{n:'মারিয়াম',r:'Mariam',g:'f',o:'হিব্রু',m:'উন্নত, পবিত্র; ঈসার মাতার নাম',alt:['মেরি','Mary','Maria']},
+{n:'সারা',r:'Sara',g:'f',o:'হিব্রু',m:'রাজকুমারী; ইব্রাহিমের স্ত্রীর নাম',alt:['সারাহ','Sarah']},
+];
+
+const GLABEL = { m: 'ছেলে', f: 'মেয়ে' };
+
+/* ============================================================
+   সার্চ + রেন্ডার
+   ============================================================ */
+const $ = id => document.getElementById(id);
+let curG = 'all', curO = 'all', lastResults = [];
+
+function norm(s) { return s.toLowerCase().replace(/[\s\-_'.]/g, ''); }
+function matchScore(entry, q) {
+  if (!q) return 1;
+  const fields = [entry.n, entry.r].concat(entry.alt || []);
+  let best = 0;
+  for (const f of fields) {
+    const nf = norm(f);
+    if (!nf) continue;
+    if (nf === q) best = Math.max(best, 3);
+    else if (nf.startsWith(q)) best = Math.max(best, 2);
+    else if (nf.includes(q)) best = Math.max(best, 1);
+  }
+  return best;
+}
+
+function search(qRaw) {
+  const q = norm(qRaw.trim());
+  const out = [];
+  for (const e of NAMES) {
+    if (curG !== 'all' && e.g !== curG) continue;
+    if (curO !== 'all' && !e.o.includes(curO)) continue;
+    const s = matchScore(e, q);
+    if (s > 0) out.push({ e, s });
+  }
+  out.sort((a, b) => b.s - a.s || a.e.n.localeCompare(b.e.n, 'bn'));
+  return out.map(x => x.e);
+}
+
+function cardHtml(e) {
+  const gc = e.g === 'f' ? 'gf' : 'gm';
+  let alt = '';
+  if (e.alt && e.alt.length) alt = '<div class="alt">বিকল্প: ' + esc(e.alt.join(' · ')) + '</div>';
+  return '<div class="name-card">' +
+    '<div class="nm">' + esc(e.n) + '</div>' +
+    '<div class="rm">' + esc(e.r) + '</div>' +
+    '<div class="mn">' + esc(e.m) + '</div>' +
+    '<div class="badges"><span class="b ' + gc + '">' + GLABEL[e.g] + '</span><span class="b go">' + esc(e.o) + '</span></div>' +
+    alt +
+    '<button class="copy-mini" onclick="copyName(this,\'' + esc(e.n) + '\')">📋 কপি</button>' +
+    '</div>';
+}
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;'); }
+
+function render() {
+  const q = $('q').value;
+  lastResults = search(q);
+  const MAX = 24;
+  const shown = lastResults.slice(0, MAX);
+  if (!shown.length) {
+    $('grid').innerHTML = '<div class="empty" style="grid-column:1/-1">😔 এই নামে কিছু পাওয়া যায়নি।<br>বানান বদলে দেখুন, অথবা অন্য নাম দিয়ে খুঁজুন।</div>';
+  } else {
+    $('grid').innerHTML = shown.map(cardHtml).join('');
+  }
+  const extra = lastResults.length - shown.length;
+  $('morenote').textContent = extra > 0 ? '…আরো ' + bn(extra) + 'টা নাম আছে — ফিল্টার বা আরেকটু লিখে দেখুন' : '';
+  $('morenote').classList.toggle('hidden', extra <= 0);
+  $('count').innerHTML = q.trim()
+    ? '“' + esc(q.trim()) + '” এর জন্য <b>' + bn(lastResults.length) + '</b>টা মিল পাওয়া গেছে'
+    : 'মোট <b>' + bn(lastResults.length) + '</b>টা নাম দেখানো হচ্ছে';
+}
+
+function bn(x) { return String(x).replace(/[0-9]/g, d => '০১২৩৪৫৬৭৮৯'[d]); }
+
+function setG(btn) {
+  document.querySelectorAll('[data-g]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  curG = btn.dataset.g;
+  render();
+}
+function setO(btn) {
+  document.querySelectorAll('[data-o]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  curO = btn.dataset.o;
+  render();
+}
+
+function randomName() {
+  const pool = NAMES.filter(e => (curG === 'all' || e.g === curG) && (curO === 'all' || e.o.includes(curO)));
+  if (!pool.length) return;
+  const e = pool[Math.floor(Math.random() * pool.length)];
+  $('q').value = e.n;
+  render();
+  const cards = document.querySelectorAll('.name-card');
+  if (cards.length) { cards[0].scrollIntoView({ behavior: 'smooth', block: 'center' }); cards[0].style.borderColor = 'var(--gold)'; }
+}
+
+function copyName(btn, name) {
+  const entry = NAMES.find(e => e.n === name);
+  if (!entry) return;
+  const text = entry.n + ' (' + entry.r + ') — ' + entry.m + ' · উৎস: ' + entry.o + ' · ' + GLABEL[entry.g] + 'দের নাম';
+  const done = () => {
+    btn.textContent = '✓ কপি হয়েছে'; btn.classList.add('done');
+    setTimeout(() => { btn.textContent = '📋 কপি'; btn.classList.remove('done'); }, 1400);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => { fallbackCopy(text); done(); });
+  } else { fallbackCopy(text); done(); }
+}
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+}
+
+/* আজকের নাম — তারিখ-ভিত্তিক নির্দিষ্ট পছন্দ */
+function dailyName() {
+  const day = Math.floor(Date.now() / 86400000);
+  return NAMES[day % NAMES.length];
+}
+
+/* ---------- init ---------- */
+$('total-badge').textContent = bn(NAMES.length);
+const today = dailyName();
+$('d-name').textContent = today.n;
+$('d-rom').textContent = today.r + ' · ' + GLABEL[today.g] + 'দের নাম · উৎস: ' + today.o;
+$('d-meaning').textContent = '📖 ' + today.m;
+$('q').addEventListener('input', render);
+render();
+</script>
+</body>
+</html>
